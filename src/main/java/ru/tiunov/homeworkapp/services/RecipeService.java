@@ -3,8 +3,18 @@ package ru.tiunov.homeworkapp.services;
 import ru.tiunov.homeworkapp.exceptions.NotFoundElementException;
 import ru.tiunov.homeworkapp.models.Recipe;
 
-public interface RecipeService {
-    void addRecipe(Recipe recipe);
+import java.util.List;
 
-    Recipe getRecipe(int id) throws NotFoundElementException;
+public interface RecipeService {
+    Recipe addRecipe(Recipe recipe) throws NotFoundElementException;
+
+    Recipe getRecipeById(int id) throws NotFoundElementException;
+
+    List<Recipe> getRecipes(int page);
+
+    Recipe updateRecipe(int id, Recipe recipe) throws NotFoundElementException;
+
+    void deleteRecipe(int id) throws NotFoundElementException;
+
+    List<Recipe> findIngredient(List<Integer> ingredientIds);
 }
