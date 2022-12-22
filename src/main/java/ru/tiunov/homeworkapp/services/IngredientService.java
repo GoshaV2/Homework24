@@ -1,5 +1,6 @@
 package ru.tiunov.homeworkapp.services;
 
+import ru.tiunov.homeworkapp.dto.IngredientDto;
 import ru.tiunov.homeworkapp.exceptions.NotFoundElementException;
 import ru.tiunov.homeworkapp.models.Ingredient;
 
@@ -8,13 +9,13 @@ import java.util.List;
 
 public interface IngredientService {
 
-    List<Ingredient> getIngredients();
+    List<IngredientDto> getIngredients();
 
-    Ingredient getIngredientById(int id) throws NotFoundElementException;
+    IngredientDto getIngredientById(int id) throws NotFoundElementException;
 
-    Ingredient createIngredient(Ingredient ingredient);
+    IngredientDto createIngredient(Ingredient ingredient);
 
-    Ingredient updateIngredient(int id, Ingredient ingredient) throws NotFoundElementException;
+    IngredientDto updateIngredient(int id, Ingredient ingredient) throws NotFoundElementException;
 
     void deleteIngredient(int id) throws NotFoundElementException;
 }

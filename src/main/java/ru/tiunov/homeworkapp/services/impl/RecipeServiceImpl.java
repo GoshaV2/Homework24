@@ -1,6 +1,8 @@
 package ru.tiunov.homeworkapp.services.impl;
 
 import org.springframework.stereotype.Service;
+import ru.tiunov.homeworkapp.dto.IngredientDto;
+import ru.tiunov.homeworkapp.dto.RecipeDto;
 import ru.tiunov.homeworkapp.exceptions.NotFoundElementException;
 import ru.tiunov.homeworkapp.models.Ingredient;
 import ru.tiunov.homeworkapp.models.Recipe;
@@ -12,38 +14,42 @@ import java.util.stream.Collectors;
 
 @Service
 public class RecipeServiceImpl implements RecipeService {
-    private final Map<Integer, Recipe> recipes;
+    private final Map<Integer, RecipeDto> recipeDtoMap;
     private final IngredientService ingredientService;
     private static int lastRecipeId = 0;
 
     public RecipeServiceImpl(IngredientService ingredientService) {
-        recipes = new TreeMap<>();
+        recipeDtoMap = new TreeMap<>();
         this.ingredientService = ingredientService;
     }
 
     @Override
-    public Recipe addRecipe(Recipe recipe) throws NotFoundElementException {
-        recipe.setId(++lastRecipeId);
-        List<Ingredient> ingredients = new ArrayList<>();
+    public RecipeDto addRecipe(Recipe recipe) throws NotFoundElementException {
+        RecipeDto recipeDto = new RecipeDto();
+        recipeDto.setTitle(recipe.getTitle());
+        recipeDto.setSteps(recipe.getSteps());
+        recipeDto.setReadyTime(recipe.getReadyTime());
+        recipeDto.setId(++lastRecipeId);
+        List<IngredientDto> ingredientDtoList = new ArrayList<>();
         for (int id : recipe.getIngredientIds()) {
-            ingredients.add(ingredientService.getIngredientById(id));
+            ingredientDtoList.add(ingredientService.getIngredientById(id));
         }
-        recipe.setIngredients(ingredients);
-        recipes.put(recipe.getId(), recipe);
-        return recipe;
+        recipeDto.setIngredients(ingredientDtoList);
+        recipeDtoMap.put(recipeDto.getId(), recipeDto);
+        return recipeDto;
     }
 
     @Override
-    public Recipe getRecipeById(int id) throws NotFoundElementException {
-        if (recipes.containsKey(id)) {
-            return recipes.get(id);
+    public RecipeDto getRecipeById(int id) throws NotFoundElementException {
+        if (recipeDtoMap.containsKey(id)) {
+            return recipeDtoMap.get(id);
         }
         throw new NotFoundElementException();
     }
 
     @Override
-    public List<Recipe> getRecipes(int page) {
-        List<Recipe> recipeList = recipes.entrySet().stream().map(e -> e.getValue()).collect(Collectors.toList());
+    public List<RecipeDto> getRecipes(int page) {
+        List<RecipeDto> recipeList = recipeDtoMap.entrySet().stream().map(e -> e.getValue()).collect(Collectors.toList());
         if (recipeList.size() < (page - 1) * 10 + 1) {
             return new ArrayList<>();
         }
@@ -54,33 +60,36 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
-    public Recipe updateRecipe(int id, Recipe recipe) throws NotFoundElementException {
-        if (!recipes.containsKey(id)) {
+    public RecipeDto updateRecipe(int id, Recipe recipe) throws NotFoundElementException {
+        if (!recipeDtoMap.containsKey(id)) {
             throw new NotFoundElementException();
         }
-        List<Ingredient> ingredients = new ArrayList<>();
+        RecipeDto recipeDto = recipeDtoMap.get(id);
+        List<IngredientDto> ingredients = new ArrayList<>();
         for (int ingredientId : recipe.getIngredientIds()) {
             ingredients.add(ingredientService.getIngredientById(ingredientId));
         }
-        recipe.setIngredients(ingredients);
-        recipes.put(id, recipe);
-        return recipe;
+        recipeDto.setReadyTime(recipe.getReadyTime());
+        recipeDto.setTitle(recipe.getTitle());
+        recipeDto.setSteps(recipe.getSteps());
+        recipeDto.setIngredients(ingredients);
+        return recipeDto;
     }
 
     @Override
     public void deleteRecipe(int id) throws NotFoundElementException {
-        if (!recipes.containsKey(id)) {
+        if (!recipeDtoMap.containsKey(id)) {
             throw new NotFoundElementException();
         }
-        recipes.remove(id);
+        recipeDtoMap.remove(id);
     }
 
     @Override
-    public List<Recipe> findIngredient(List<Integer> ingredientIds) {
-        return recipes.entrySet().stream().map(
+    public List<RecipeDto> findIngredient(List<Integer> ingredientIds) {
+        return recipeDtoMap.entrySet().stream().map(
                         e -> e.getValue()).filter(
                         recipe -> recipe.getIngredients().stream()
-                                .filter(ingredient -> ingredientIds.contains(ingredient.getId())).count() != 0)
+                                .filter(ingredient -> ingredientIds.contains(ingredient.getId())).count() == ingredientIds.size())
                 .collect(Collectors.toList());
     }
 }
