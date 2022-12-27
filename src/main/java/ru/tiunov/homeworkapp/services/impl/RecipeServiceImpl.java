@@ -7,22 +7,33 @@ import ru.tiunov.homeworkapp.exceptions.NotFoundElementException;
 import ru.tiunov.homeworkapp.models.Ingredient;
 import ru.tiunov.homeworkapp.models.Recipe;
 import ru.tiunov.homeworkapp.services.IngredientService;
+import ru.tiunov.homeworkapp.services.RecipeFileService;
 import ru.tiunov.homeworkapp.services.RecipeService;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class RecipeServiceImpl implements RecipeService {
-    private final Map<Integer, RecipeDto> recipeDtoMap;
+    private Map<Integer, RecipeDto> recipeDtoMap;
     private final IngredientService ingredientService;
+
+    private final RecipeFileService recipeFileService;
     private static int lastRecipeId = 0;
 
-    public RecipeServiceImpl(IngredientService ingredientService) {
+    public RecipeServiceImpl(IngredientService ingredientService,RecipeFileService recipeFileService) {
         recipeDtoMap = new TreeMap<>();
         this.ingredientService = ingredientService;
+        this.recipeFileService=recipeFileService;
     }
-
+    @PostConstruct
+    public void init(){
+        recipeDtoMap=recipeFileService.readRecipeMap();
+    }
+    private void saveRecipeMap(){
+        recipeFileService.writeRecipeMap(recipeDtoMap);
+    }
     @Override
     public RecipeDto addRecipe(Recipe recipe) throws NotFoundElementException {
         RecipeDto recipeDto = new RecipeDto();
@@ -36,6 +47,7 @@ public class RecipeServiceImpl implements RecipeService {
         }
         recipeDto.setIngredients(ingredientDtoList);
         recipeDtoMap.put(recipeDto.getId(), recipeDto);
+        saveRecipeMap();
         return recipeDto;
     }
 
@@ -73,6 +85,7 @@ public class RecipeServiceImpl implements RecipeService {
         recipeDto.setTitle(recipe.getTitle());
         recipeDto.setSteps(recipe.getSteps());
         recipeDto.setIngredients(ingredients);
+        saveRecipeMap();
         return recipeDto;
     }
 
@@ -81,6 +94,7 @@ public class RecipeServiceImpl implements RecipeService {
         if (!recipeDtoMap.containsKey(id)) {
             throw new NotFoundElementException();
         }
+        saveRecipeMap();
         recipeDtoMap.remove(id);
     }
 
