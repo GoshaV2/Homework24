@@ -4,36 +4,40 @@ import org.springframework.stereotype.Service;
 import ru.tiunov.homeworkapp.dto.IngredientDto;
 import ru.tiunov.homeworkapp.dto.RecipeDto;
 import ru.tiunov.homeworkapp.exceptions.NotFoundElementException;
-import ru.tiunov.homeworkapp.models.Ingredient;
 import ru.tiunov.homeworkapp.models.Recipe;
 import ru.tiunov.homeworkapp.services.IngredientService;
 import ru.tiunov.homeworkapp.services.RecipeFileService;
 import ru.tiunov.homeworkapp.services.RecipeService;
+import ru.tiunov.homeworkapp.util.observer.Observer;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class RecipeServiceImpl implements RecipeService {
+public class RecipeServiceImpl implements RecipeService, Observer {
     private Map<Integer, RecipeDto> recipeDtoMap;
     private final IngredientService ingredientService;
 
     private final RecipeFileService recipeFileService;
     private static int lastRecipeId = 0;
 
-    public RecipeServiceImpl(IngredientService ingredientService,RecipeFileService recipeFileService) {
+    public RecipeServiceImpl(IngredientService ingredientService, RecipeFileService recipeFileService) {
         recipeDtoMap = new TreeMap<>();
         this.ingredientService = ingredientService;
-        this.recipeFileService=recipeFileService;
+        this.recipeFileService = recipeFileService;
     }
+
     @PostConstruct
-    public void init(){
-        recipeDtoMap=recipeFileService.readRecipeMap();
+    public void init() {
+        recipeDtoMap = recipeFileService.readRecipeMap();
+        recipeFileService.register(this);
     }
-    private void saveRecipeMap(){
+
+    private void saveRecipeMap() {
         recipeFileService.writeRecipeMap(recipeDtoMap);
     }
+
     @Override
     public RecipeDto addRecipe(Recipe recipe) throws NotFoundElementException {
         RecipeDto recipeDto = new RecipeDto();
@@ -105,5 +109,10 @@ public class RecipeServiceImpl implements RecipeService {
                         recipe -> recipe.getIngredients().stream()
                                 .filter(ingredient -> ingredientIds.contains(ingredient.getId())).count() == ingredientIds.size())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void update() {
+        recipeDtoMap = recipeFileService.readRecipeMap();
     }
 }

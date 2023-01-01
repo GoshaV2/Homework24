@@ -8,6 +8,7 @@ import ru.tiunov.homeworkapp.models.Ingredient;
 import ru.tiunov.homeworkapp.services.IngredientFileService;
 import ru.tiunov.homeworkapp.services.IngredientService;
 import ru.tiunov.homeworkapp.services.RecipeService;
+import ru.tiunov.homeworkapp.util.observer.Observer;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
-public class IngredientServiceImpl implements IngredientService {
+public class IngredientServiceImpl implements IngredientService, Observer {
     private Map<Integer, IngredientDto> ingredientDtoMap;
 
     private static int lastIngredientId = 0;
@@ -30,6 +31,7 @@ public class IngredientServiceImpl implements IngredientService {
     @PostConstruct
     public void init() {
         ingredientDtoMap = ingredientFileService.readIngredientMap();
+        ingredientFileService.register(this);
     }
 
     private void saveIngredientMap() {
@@ -81,5 +83,10 @@ public class IngredientServiceImpl implements IngredientService {
             saveIngredientMap();
         }
         throw new NotFoundElementException("Not found Ingredient");
+    }
+
+    @Override
+    public void update() {
+        ingredientDtoMap = ingredientFileService.readIngredientMap();
     }
 }

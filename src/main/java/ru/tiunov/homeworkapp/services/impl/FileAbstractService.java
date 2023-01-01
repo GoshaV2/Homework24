@@ -1,5 +1,9 @@
 package ru.tiunov.homeworkapp.services.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.core.io.InputStreamResource;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,5 +52,36 @@ public abstract class FileAbstractService {
             e.printStackTrace();
         }
         return result.toString();
+    }
+
+    protected InputStreamResource getInputStreamOfFile(String path) throws FileNotFoundException {
+        File file = getFile(path);
+        return new InputStreamResource(new FileInputStream(file));
+    }
+
+    protected void importFileFromInputStream(InputStream inputStream, String path) throws JsonProcessingException {
+        StringBuffer jsonStringBuffer = new StringBuffer();
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                jsonStringBuffer.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        validJson(jsonStringBuffer.toString());
+        write(jsonStringBuffer.toString(), path);
+    }
+
+    private void validJson(String json) throws JsonProcessingException {
+        new ObjectMapper().readTree(json);
+    }
+
+    private File getFile(String path) throws FileNotFoundException {
+        if (Files.exists(Path.of(path))) {
+            File file = new File(path);
+            return file;
+        }
+        throw new FileNotFoundException();
     }
 }
