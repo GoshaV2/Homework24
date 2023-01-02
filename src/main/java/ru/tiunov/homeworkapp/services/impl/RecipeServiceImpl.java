@@ -11,6 +11,7 @@ import ru.tiunov.homeworkapp.services.RecipeService;
 import ru.tiunov.homeworkapp.util.observer.Observer;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,16 +31,21 @@ public class RecipeServiceImpl implements RecipeService, Observer {
 
     @PostConstruct
     public void init() {
-        recipeDtoMap = recipeFileService.readRecipeMap();
+        try {
+            recipeDtoMap = recipeFileService.readRecipeMap();
+        } catch (IOException e) {
+            recipeDtoMap = new TreeMap<>();
+            lastRecipeId = 0;
+        }
         recipeFileService.register(this);
     }
 
-    private void saveRecipeMap() {
+    private void saveRecipeMap() throws IOException {
         recipeFileService.writeRecipeMap(recipeDtoMap);
     }
 
     @Override
-    public RecipeDto addRecipe(Recipe recipe) throws NotFoundElementException {
+    public RecipeDto addRecipe(Recipe recipe) throws NotFoundElementException, IOException {
         RecipeDto recipeDto = new RecipeDto();
         recipeDto.setTitle(recipe.getTitle());
         recipeDto.setSteps(recipe.getSteps());
@@ -51,7 +57,12 @@ public class RecipeServiceImpl implements RecipeService, Observer {
         }
         recipeDto.setIngredients(ingredientDtoList);
         recipeDtoMap.put(recipeDto.getId(), recipeDto);
-        saveRecipeMap();
+        try {
+            saveRecipeMap();
+        } catch (IOException e) {
+            recipeDtoMap.remove(recipeDto.getId());
+            throw new IOException();
+        }
         return recipeDto;
     }
 
@@ -76,11 +87,13 @@ public class RecipeServiceImpl implements RecipeService, Observer {
     }
 
     @Override
-    public RecipeDto updateRecipe(int id, Recipe recipe) throws NotFoundElementException {
+    public RecipeDto updateRecipe(int id, Recipe recipe) throws NotFoundElementException, IOException {
         if (!recipeDtoMap.containsKey(id)) {
             throw new NotFoundElementException();
         }
-        RecipeDto recipeDto = recipeDtoMap.get(id);
+        RecipeDto recipeDtoOld = recipeDtoMap.get(id);
+        RecipeDto recipeDto = new RecipeDto();
+        recipeDto.setId(id);
         List<IngredientDto> ingredients = new ArrayList<>();
         for (int ingredientId : recipe.getIngredientIds()) {
             ingredients.add(ingredientService.getIngredientById(ingredientId));
@@ -89,16 +102,28 @@ public class RecipeServiceImpl implements RecipeService, Observer {
         recipeDto.setTitle(recipe.getTitle());
         recipeDto.setSteps(recipe.getSteps());
         recipeDto.setIngredients(ingredients);
-        saveRecipeMap();
+        recipeDtoMap.put(id, recipeDto);
+        try {
+            saveRecipeMap();
+        } catch (IOException e) {
+            recipeDtoMap.put(id, recipeDtoOld);
+            throw new IOException();
+        }
         return recipeDto;
     }
 
     @Override
-    public void deleteRecipe(int id) throws NotFoundElementException {
+    public void deleteRecipe(int id) throws NotFoundElementException, IOException {
         if (!recipeDtoMap.containsKey(id)) {
             throw new NotFoundElementException();
         }
-        saveRecipeMap();
+        RecipeDto recipeDtoOld = recipeDtoMap.get(id);
+        try {
+            saveRecipeMap();
+        } catch (IOException e) {
+            recipeDtoMap.put(id, recipeDtoOld);
+            throw new IOException();
+        }
         recipeDtoMap.remove(id);
     }
 
@@ -113,6 +138,10 @@ public class RecipeServiceImpl implements RecipeService, Observer {
 
     @Override
     public void update() {
-        recipeDtoMap = recipeFileService.readRecipeMap();
+        try {
+            recipeDtoMap = recipeFileService.readRecipeMap();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

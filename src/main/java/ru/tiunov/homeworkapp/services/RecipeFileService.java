@@ -6,15 +6,16 @@ import ru.tiunov.homeworkapp.dto.RecipeDto;
 import ru.tiunov.homeworkapp.util.observer.Subject;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
 public interface RecipeFileService extends Subject {
-    Map<Integer, RecipeDto> readRecipeMap();
+    Map<Integer, RecipeDto> readRecipeMap() throws IOException;
 
-    void writeRecipeMap(Map<Integer, RecipeDto> recipeMap);
+    void writeRecipeMap(Map<Integer, RecipeDto> recipeMap) throws IOException;
 
     InputStreamResource getInputStreamOfRecipeData() throws FileNotFoundException;
 
-    void importRecipeData(InputStream inputStream) throws JsonProcessingException;
+    void importRecipeData(InputStream inputStream) throws IOException;
 }

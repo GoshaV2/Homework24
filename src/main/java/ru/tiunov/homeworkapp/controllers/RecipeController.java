@@ -17,6 +17,7 @@ import ru.tiunov.homeworkapp.exceptions.NotFoundElementException;
 import ru.tiunov.homeworkapp.models.Recipe;
 import ru.tiunov.homeworkapp.services.RecipeService;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -102,6 +103,9 @@ public class RecipeController {
             return ResponseEntity.ok(recipeService.addRecipe(recipe));
         } catch (NotFoundElementException e) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).build();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -123,6 +127,9 @@ public class RecipeController {
             return ResponseEntity.ok(recipeService.updateRecipe(id, recipe));
         } catch (NotFoundElementException e) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).build();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -140,6 +147,9 @@ public class RecipeController {
             return ResponseEntity.ok().build();
         } catch (NotFoundElementException e) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).build();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

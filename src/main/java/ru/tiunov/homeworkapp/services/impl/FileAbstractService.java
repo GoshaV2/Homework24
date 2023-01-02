@@ -28,18 +28,16 @@ public abstract class FileAbstractService {
         }
     }
 
-    protected void write(String json, String path) {
+    protected void write(String json, String path) throws IOException {
         clearFile(path);
         createFileIfNotExist(path);
         File file = new File(path);
         try (FileWriter fileWriter = new FileWriter(file)) {
             fileWriter.write(json);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    protected String read(String path) {
+    protected String read(String path) throws IOException {
         createFileIfNotExist(path);
         File file = new File(path);
         StringBuffer result = new StringBuffer();
@@ -48,8 +46,6 @@ public abstract class FileAbstractService {
             while ((line = bufferedReader.readLine()) != null) {
                 result.append(line);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         return result.toString();
     }
@@ -59,18 +55,17 @@ public abstract class FileAbstractService {
         return new InputStreamResource(new FileInputStream(file));
     }
 
-    protected void importFileFromInputStream(InputStream inputStream, String path) throws JsonProcessingException {
+    protected void importFileFromInputStream(InputStream inputStream, String path) throws IOException {
         StringBuffer jsonStringBuffer = new StringBuffer();
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 jsonStringBuffer.append(line);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            validJson(jsonStringBuffer.toString());
+            write(jsonStringBuffer.toString(), path);
         }
-        validJson(jsonStringBuffer.toString());
-        write(jsonStringBuffer.toString(), path);
+
     }
 
     private void validJson(String json) throws JsonProcessingException {

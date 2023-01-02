@@ -7,6 +7,8 @@ import ru.tiunov.homeworkapp.exceptions.NotFoundElementException;
 import ru.tiunov.homeworkapp.models.Ingredient;
 import ru.tiunov.homeworkapp.services.IngredientService;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/ingredient")
 public class IngredientController {
@@ -32,7 +34,12 @@ public class IngredientController {
 
     @PostMapping
     public ResponseEntity createIngredient(@RequestBody Ingredient ingredient) {
-        return ResponseEntity.ok(ingredientService.createIngredient(ingredient));
+        try {
+            return ResponseEntity.ok(ingredientService.createIngredient(ingredient));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PutMapping("/{id}")
@@ -41,6 +48,9 @@ public class IngredientController {
             return ResponseEntity.ok(ingredientService.updateIngredient(id, ingredient));
         } catch (NotFoundElementException e) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).build();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -51,6 +61,9 @@ public class IngredientController {
             return ResponseEntity.ok().build();
         } catch (NotFoundElementException e) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).build();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
         }
 
     }

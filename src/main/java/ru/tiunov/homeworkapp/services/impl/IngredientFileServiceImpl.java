@@ -12,6 +12,7 @@ import ru.tiunov.homeworkapp.services.IngredientFileService;
 import ru.tiunov.homeworkapp.util.observer.Observer;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Map;
@@ -32,7 +33,7 @@ public class IngredientFileServiceImpl extends FileAbstractService implements In
     }
 
     @Override
-    public Map<Integer, IngredientDto> readIngredientMap() {
+    public Map<Integer, IngredientDto> readIngredientMap() throws IOException {
         Map<Integer, IngredientDto> ingredientMap = new TreeMap<>();
         String json = read(dir + name);
         if (!(json == null || json.isEmpty())) {
@@ -47,7 +48,7 @@ public class IngredientFileServiceImpl extends FileAbstractService implements In
     }
 
     @Override
-    public void writeMapIngredient(Map<Integer, IngredientDto> ingredientMap) {
+    public void writeMapIngredient(Map<Integer, IngredientDto> ingredientMap) throws IOException {
         try {
             write(new ObjectMapper().writeValueAsString(ingredientMap), dir + name);
         } catch (JsonProcessingException e) {
@@ -61,7 +62,7 @@ public class IngredientFileServiceImpl extends FileAbstractService implements In
     }
 
     @Override
-    public void importIngredientData(InputStream inputStream) throws JsonProcessingException {
+    public void importIngredientData(InputStream inputStream) throws IOException {
         importFileFromInputStream(inputStream, dir + name);
         notifyObservers();
     }

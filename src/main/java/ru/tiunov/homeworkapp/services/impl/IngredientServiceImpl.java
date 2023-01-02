@@ -11,6 +11,7 @@ import ru.tiunov.homeworkapp.services.RecipeService;
 import ru.tiunov.homeworkapp.util.observer.Observer;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -30,11 +31,17 @@ public class IngredientServiceImpl implements IngredientService, Observer {
 
     @PostConstruct
     public void init() {
-        ingredientDtoMap = ingredientFileService.readIngredientMap();
+        try {
+            ingredientDtoMap = ingredientFileService.readIngredientMap();
+        } catch (IOException e) {
+            ingredientDtoMap = new TreeMap<>();
+            lastIngredientId = 0;
+            e.printStackTrace();
+        }
         ingredientFileService.register(this);
     }
 
-    private void saveIngredientMap() {
+    private void saveIngredientMap() throws IOException {
         ingredientFileService.writeMapIngredient(ingredientDtoMap);
     }
 
@@ -52,41 +59,65 @@ public class IngredientServiceImpl implements IngredientService, Observer {
     }
 
     @Override
-    public IngredientDto createIngredient(Ingredient ingredient) {
+    public IngredientDto createIngredient(Ingredient ingredient) throws IOException {
         IngredientDto ingredientDto = new IngredientDto();
         ingredientDto.setId(++lastIngredientId);
         ingredientDto.setCount(ingredient.getCount());
         ingredientDto.setTitle(ingredient.getTitle());
         ingredientDto.setUnitOfMeasurement(ingredient.getUnitOfMeasurement());
         ingredientDtoMap.put(ingredientDto.getId(), ingredientDto);
-        saveIngredientMap();
+        try {
+            saveIngredientMap();
+        } catch (IOException e) {
+            ingredientDtoMap.remove(ingredientDto.getId());
+            throw new IOException();
+        }
         return ingredientDto;
     }
 
     @Override
-    public IngredientDto updateIngredient(int id, Ingredient ingredient) throws NotFoundElementException {
+    public IngredientDto updateIngredient(int id, Ingredient ingredient) throws NotFoundElementException, IOException {
         if (!ingredientDtoMap.containsKey(id)) {
             throw new NotFoundElementException("Not found Ingredient");
         }
-        IngredientDto ingredientDto = ingredientDtoMap.get(id);
+        IngredientDto ingredientDto = new IngredientDto();
+        ingredientDto.setId(id);
         ingredientDto.setTitle(ingredient.getTitle());
         ingredientDto.setCount(ingredient.getCount());
         ingredientDto.setUnitOfMeasurement(ingredient.getUnitOfMeasurement());
-        saveIngredientMap();
+
+        IngredientDto ingredientDtoOld = ingredientDtoMap.get(id);
+        ingredientDtoMap.put(id, ingredientDto);
+        try {
+            saveIngredientMap();
+        } catch (IOException e) {
+            ingredientDtoMap.put(id, ingredientDtoOld);
+            throw new IOException();
+        }
         return ingredientDto;
     }
 
     @Override
-    public void deleteIngredient(int id) throws NotFoundElementException {
+    public void deleteIngredient(int id) throws NotFoundElementException, IOException {
         if (ingredientDtoMap.containsKey(id)) {
             ingredientDtoMap.remove(id);
-            saveIngredientMap();
+            IngredientDto ingredientDtoOld = ingredientDtoMap.get(id);
+            try {
+                saveIngredientMap();
+            } catch (IOException e) {
+                ingredientDtoMap.put(id, ingredientDtoOld);
+                throw new IOException();
+            }
         }
         throw new NotFoundElementException("Not found Ingredient");
     }
 
     @Override
     public void update() {
-        ingredientDtoMap = ingredientFileService.readIngredientMap();
+        try {
+            ingredientDtoMap = ingredientFileService.readIngredientMap();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

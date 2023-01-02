@@ -7,15 +7,16 @@ import ru.tiunov.homeworkapp.models.Ingredient;
 import ru.tiunov.homeworkapp.util.observer.Subject;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
 public interface IngredientFileService extends Subject {
-    Map<Integer, IngredientDto> readIngredientMap();
+    Map<Integer, IngredientDto> readIngredientMap() throws IOException;
 
-    void writeMapIngredient(Map<Integer, IngredientDto> ingredientMap);
+    void writeMapIngredient(Map<Integer, IngredientDto> ingredientMap) throws IOException;
 
     InputStreamResource getInputStreamOfIngredientData() throws FileNotFoundException;
 
-    void importIngredientData(InputStream inputStream) throws JsonProcessingException;
+    void importIngredientData(InputStream inputStream) throws IOException;
 }
