@@ -3,7 +3,7 @@ package ru.tiunov.homeworkapp.controllers;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.tiunov.homeworkapp.exceptions.NotFoundElementException;
+import ru.tiunov.homeworkapp.exception.NotFoundElementException;
 import ru.tiunov.homeworkapp.models.Ingredient;
 import ru.tiunov.homeworkapp.services.IngredientService;
 

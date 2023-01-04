@@ -1,7 +1,7 @@
 package ru.tiunov.homeworkapp.services;
 
 import ru.tiunov.homeworkapp.dto.RecipeDto;
-import ru.tiunov.homeworkapp.exceptions.NotFoundElementException;
+import ru.tiunov.homeworkapp.exception.NotFoundElementException;
 import ru.tiunov.homeworkapp.models.Recipe;
 
 import java.io.IOException;
@@ -19,4 +19,6 @@ public interface RecipeService {
     void deleteRecipe(int id) throws NotFoundElementException, IOException;
 
     List<RecipeDto> findIngredient(List<Integer> ingredientIds);
+
+    void initializeData() throws IOException;
 }

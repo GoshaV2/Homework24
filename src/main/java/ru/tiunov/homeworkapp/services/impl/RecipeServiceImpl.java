@@ -3,20 +3,22 @@ package ru.tiunov.homeworkapp.services.impl;
 import org.springframework.stereotype.Service;
 import ru.tiunov.homeworkapp.dto.IngredientDto;
 import ru.tiunov.homeworkapp.dto.RecipeDto;
-import ru.tiunov.homeworkapp.exceptions.NotFoundElementException;
+import ru.tiunov.homeworkapp.exception.NotFoundElementException;
 import ru.tiunov.homeworkapp.models.Recipe;
 import ru.tiunov.homeworkapp.services.IngredientService;
 import ru.tiunov.homeworkapp.services.RecipeFileService;
 import ru.tiunov.homeworkapp.services.RecipeService;
-import ru.tiunov.homeworkapp.util.observer.Observer;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
-public class RecipeServiceImpl implements RecipeService, Observer {
+public class RecipeServiceImpl implements RecipeService {
     private Map<Integer, RecipeDto> recipeDtoMap;
     private final IngredientService ingredientService;
 
@@ -32,12 +34,16 @@ public class RecipeServiceImpl implements RecipeService, Observer {
     @PostConstruct
     public void init() {
         try {
-            recipeDtoMap = recipeFileService.readRecipeMap();
+            recipeFileService.initRecipeService(this);
+            initializeData();
         } catch (IOException e) {
-            recipeDtoMap = new TreeMap<>();
-            lastRecipeId = 0;
+            e.printStackTrace();
         }
-        recipeFileService.register(this);
+    }
+
+    @Override
+    public void initializeData() throws IOException {
+        recipeDtoMap = recipeFileService.readRecipeMap();
     }
 
     private void saveRecipeMap() throws IOException {
@@ -57,12 +63,7 @@ public class RecipeServiceImpl implements RecipeService, Observer {
         }
         recipeDto.setIngredients(ingredientDtoList);
         recipeDtoMap.put(recipeDto.getId(), recipeDto);
-        try {
-            saveRecipeMap();
-        } catch (IOException e) {
-            recipeDtoMap.remove(recipeDto.getId());
-            throw new IOException();
-        }
+        saveRecipeMap();
         return recipeDto;
     }
 
@@ -76,7 +77,7 @@ public class RecipeServiceImpl implements RecipeService, Observer {
 
     @Override
     public List<RecipeDto> getRecipes(int page) {
-        List<RecipeDto> recipeList = recipeDtoMap.entrySet().stream().map(e -> e.getValue()).collect(Collectors.toList());
+        List<RecipeDto> recipeList = new ArrayList<>(recipeDtoMap.values());
         if (recipeList.size() < (page - 1) * 10 + 1) {
             return new ArrayList<>();
         }
@@ -91,7 +92,6 @@ public class RecipeServiceImpl implements RecipeService, Observer {
         if (!recipeDtoMap.containsKey(id)) {
             throw new NotFoundElementException();
         }
-        RecipeDto recipeDtoOld = recipeDtoMap.get(id);
         RecipeDto recipeDto = new RecipeDto();
         recipeDto.setId(id);
         List<IngredientDto> ingredients = new ArrayList<>();
@@ -103,12 +103,7 @@ public class RecipeServiceImpl implements RecipeService, Observer {
         recipeDto.setSteps(recipe.getSteps());
         recipeDto.setIngredients(ingredients);
         recipeDtoMap.put(id, recipeDto);
-        try {
-            saveRecipeMap();
-        } catch (IOException e) {
-            recipeDtoMap.put(id, recipeDtoOld);
-            throw new IOException();
-        }
+        saveRecipeMap();
         return recipeDto;
     }
 
@@ -117,31 +112,16 @@ public class RecipeServiceImpl implements RecipeService, Observer {
         if (!recipeDtoMap.containsKey(id)) {
             throw new NotFoundElementException();
         }
-        RecipeDto recipeDtoOld = recipeDtoMap.get(id);
-        try {
-            saveRecipeMap();
-        } catch (IOException e) {
-            recipeDtoMap.put(id, recipeDtoOld);
-            throw new IOException();
-        }
+        saveRecipeMap();
         recipeDtoMap.remove(id);
     }
 
     @Override
     public List<RecipeDto> findIngredient(List<Integer> ingredientIds) {
-        return recipeDtoMap.entrySet().stream().map(
-                        e -> e.getValue()).filter(
+        return recipeDtoMap.values().stream().filter(
                         recipe -> recipe.getIngredients().stream()
                                 .filter(ingredient -> ingredientIds.contains(ingredient.getId())).count() == ingredientIds.size())
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public void update() {
-        try {
-            recipeDtoMap = recipeFileService.readRecipeMap();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }

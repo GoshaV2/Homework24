@@ -8,14 +8,12 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import ru.tiunov.homeworkapp.dto.RecipeDto;
 import ru.tiunov.homeworkapp.services.RecipeFileService;
-import ru.tiunov.homeworkapp.util.observer.Observer;
+import ru.tiunov.homeworkapp.services.RecipeService;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 @Service
@@ -25,10 +23,11 @@ public class RecipeFileServiceImpl extends FileAbstractService implements Recipe
     @Value("${data.recipe.file.name}")
     private String name;
 
-    private Set<Observer> observers;
+    private RecipeService recipeService;
 
-    public RecipeFileServiceImpl() {
-        observers = new HashSet<>();
+    @Override
+    public void initRecipeService(RecipeService recipeService) {
+        this.recipeService = recipeService;
     }
 
     @Override
@@ -63,21 +62,6 @@ public class RecipeFileServiceImpl extends FileAbstractService implements Recipe
     @Override
     public void importRecipeData(InputStream inputStream) throws IOException {
         importFileFromInputStream(inputStream, dir + name);
-        notifyObservers();
-    }
-
-    @Override
-    public void register(Observer observer) {
-        if (observer == null) {
-            throw new NullPointerException();
-        }
-        observers.add(observer);
-    }
-
-    @Override
-    public void notifyObservers() {
-        for (Observer observer : observers) {
-            observer.update();
-        }
+        recipeService.initializeData();
     }
 }

@@ -7,16 +7,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import ru.tiunov.homeworkapp.dto.IngredientDto;
-import ru.tiunov.homeworkapp.models.Ingredient;
 import ru.tiunov.homeworkapp.services.IngredientFileService;
-import ru.tiunov.homeworkapp.util.observer.Observer;
+import ru.tiunov.homeworkapp.services.IngredientService;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 @Service
@@ -26,10 +23,11 @@ public class IngredientFileServiceImpl extends FileAbstractService implements In
     @Value("${data.ingredient.file.name}")
     private String name;
 
-    private Set<Observer> observers;
+    private IngredientService ingredientService;
 
-    public IngredientFileServiceImpl() {
-        observers = new HashSet<>();
+    @Override
+    public void initIngredientService(IngredientService ingredientService) {
+        this.ingredientService = ingredientService;
     }
 
     @Override
@@ -64,21 +62,6 @@ public class IngredientFileServiceImpl extends FileAbstractService implements In
     @Override
     public void importIngredientData(InputStream inputStream) throws IOException {
         importFileFromInputStream(inputStream, dir + name);
-        notifyObservers();
-    }
-
-    @Override
-    public void register(Observer observer) {
-        if (observer == null) {
-            throw new NullPointerException();
-        }
-        observers.add(observer);
-    }
-
-    @Override
-    public void notifyObservers() {
-        for (Observer observer : observers) {
-            observer.update();
-        }
+        ingredientService.initializeData();
     }
 }

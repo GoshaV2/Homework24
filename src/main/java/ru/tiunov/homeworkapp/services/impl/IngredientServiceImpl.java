@@ -1,24 +1,21 @@
 package ru.tiunov.homeworkapp.services.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.tiunov.homeworkapp.dto.IngredientDto;
-import ru.tiunov.homeworkapp.exceptions.NotFoundElementException;
+import ru.tiunov.homeworkapp.exception.NotFoundElementException;
 import ru.tiunov.homeworkapp.models.Ingredient;
 import ru.tiunov.homeworkapp.services.IngredientFileService;
 import ru.tiunov.homeworkapp.services.IngredientService;
-import ru.tiunov.homeworkapp.services.RecipeService;
-import ru.tiunov.homeworkapp.util.observer.Observer;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 @Service
-public class IngredientServiceImpl implements IngredientService, Observer {
+public class IngredientServiceImpl implements IngredientService {
     private Map<Integer, IngredientDto> ingredientDtoMap;
 
     private static int lastIngredientId = 0;
@@ -32,13 +29,11 @@ public class IngredientServiceImpl implements IngredientService, Observer {
     @PostConstruct
     public void init() {
         try {
-            ingredientDtoMap = ingredientFileService.readIngredientMap();
+            ingredientFileService.initIngredientService(this);
+            initializeData();
         } catch (IOException e) {
-            ingredientDtoMap = new TreeMap<>();
-            lastIngredientId = 0;
             e.printStackTrace();
         }
-        ingredientFileService.register(this);
     }
 
     private void saveIngredientMap() throws IOException {
@@ -47,7 +42,7 @@ public class IngredientServiceImpl implements IngredientService, Observer {
 
     @Override
     public List<IngredientDto> getIngredients() {
-        return ingredientDtoMap.entrySet().stream().map(e -> e.getValue()).collect(Collectors.toList());
+        return new ArrayList<>(ingredientDtoMap.values());
     }
 
     @Override
@@ -66,12 +61,7 @@ public class IngredientServiceImpl implements IngredientService, Observer {
         ingredientDto.setTitle(ingredient.getTitle());
         ingredientDto.setUnitOfMeasurement(ingredient.getUnitOfMeasurement());
         ingredientDtoMap.put(ingredientDto.getId(), ingredientDto);
-        try {
-            saveIngredientMap();
-        } catch (IOException e) {
-            ingredientDtoMap.remove(ingredientDto.getId());
-            throw new IOException();
-        }
+        saveIngredientMap();
         return ingredientDto;
     }
 
@@ -86,14 +76,8 @@ public class IngredientServiceImpl implements IngredientService, Observer {
         ingredientDto.setCount(ingredient.getCount());
         ingredientDto.setUnitOfMeasurement(ingredient.getUnitOfMeasurement());
 
-        IngredientDto ingredientDtoOld = ingredientDtoMap.get(id);
         ingredientDtoMap.put(id, ingredientDto);
-        try {
-            saveIngredientMap();
-        } catch (IOException e) {
-            ingredientDtoMap.put(id, ingredientDtoOld);
-            throw new IOException();
-        }
+        saveIngredientMap();
         return ingredientDto;
     }
 
@@ -101,23 +85,13 @@ public class IngredientServiceImpl implements IngredientService, Observer {
     public void deleteIngredient(int id) throws NotFoundElementException, IOException {
         if (ingredientDtoMap.containsKey(id)) {
             ingredientDtoMap.remove(id);
-            IngredientDto ingredientDtoOld = ingredientDtoMap.get(id);
-            try {
-                saveIngredientMap();
-            } catch (IOException e) {
-                ingredientDtoMap.put(id, ingredientDtoOld);
-                throw new IOException();
-            }
+            saveIngredientMap();
         }
         throw new NotFoundElementException("Not found Ingredient");
     }
 
     @Override
-    public void update() {
-        try {
-            ingredientDtoMap = ingredientFileService.readIngredientMap();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void initializeData() throws IOException {
+        ingredientDtoMap = ingredientFileService.readIngredientMap();
     }
 }
