@@ -70,4 +70,18 @@ public class FileController {
         }
     }
 
+    @GetMapping("/export/recipe/forReading")
+    public ResponseEntity<InputStreamResource> getRecipeForReading() {
+        try {
+            InputStreamResource inputStreamResource = recipeFileService.getInputStreamOfRecipeForReading();
+            return ResponseEntity.ok()
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .header(HttpHeaders.CONTENT_TYPE, "text/plain;charset=UTF-8")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"RecipeForReading.txt\"")
+                    .body(inputStreamResource);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
 }

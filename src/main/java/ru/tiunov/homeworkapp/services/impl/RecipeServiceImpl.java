@@ -11,10 +11,7 @@ import ru.tiunov.homeworkapp.services.RecipeService;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,6 +41,8 @@ public class RecipeServiceImpl implements RecipeService {
     @Override
     public void initializeData() throws IOException {
         recipeDtoMap = recipeFileService.readRecipeMap();
+        Optional<Integer> maxId=recipeDtoMap.keySet().stream().max(Integer::compare);
+        maxId.ifPresent(integer -> lastRecipeId = integer);
     }
 
     private void saveRecipeMap() throws IOException {

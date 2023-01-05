@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
+import ru.tiunov.homeworkapp.dto.IngredientDto;
 import ru.tiunov.homeworkapp.dto.RecipeDto;
 import ru.tiunov.homeworkapp.services.RecipeFileService;
 import ru.tiunov.homeworkapp.services.RecipeService;
@@ -13,6 +14,7 @@ import ru.tiunov.homeworkapp.services.RecipeService;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -63,5 +65,32 @@ public class RecipeFileServiceImpl extends FileAbstractService implements Recipe
     public void importRecipeData(InputStream inputStream) throws IOException {
         importFileFromInputStream(inputStream, dir + name);
         recipeService.initializeData();
+    }
+
+    @Override
+    public InputStreamResource getInputStreamOfRecipeForReading() throws IOException {
+        Map<Integer, RecipeDto> recipeDtoMap = readRecipeMap();
+        return getInputStreamOfString(parseRecipe(recipeDtoMap).toString());
+    }
+
+    private StringBuffer parseRecipe(Map<Integer, RecipeDto> recipeDtoMap) {
+        StringBuffer stringBuffer = new StringBuffer();
+        for (Map.Entry<Integer, RecipeDto> entry : recipeDtoMap.entrySet()) {
+            RecipeDto recipeDto = entry.getValue();
+            stringBuffer.append(recipeDto.getTitle() + "\n");
+            stringBuffer.append("Время приготовления: " + recipeDto.getReadyTime() + " минут.\n");
+            stringBuffer.append("Ингредиенты:\n");
+            for (IngredientDto ingredientDto : recipeDto.getIngredients()) {
+                stringBuffer.append("* " + ingredientDto.getTitle() + " - " + ingredientDto.getCount() + " "
+                        + ingredientDto.getUnitOfMeasurement() + ".\n");
+            }
+            stringBuffer.append("Инструкция приготовления:\n");
+            List<String> steps = recipeDto.getSteps();
+            for (int i = 0; i < steps.size(); i++) {
+                stringBuffer.append((i + 1) + ". " + steps.get(i) + ".\n");
+            }
+            stringBuffer.append("\n\n\n");
+        }
+        return stringBuffer;
     }
 }
