@@ -28,20 +28,20 @@ public abstract class FileAbstractService {
         }
     }
 
-    protected void write(String json, String path) throws IOException {
+    protected void write(String data, String path) throws IOException {
         clearFile(path);
         createFileIfNotExist(path);
         File file = new File(path);
         try (FileWriter fileWriter = new FileWriter(file)) {
-            fileWriter.write(json);
+            fileWriter.write(data);
         }
     }
 
     protected String read(String path) throws IOException {
         createFileIfNotExist(path);
         File file = new File(path);
-        StringBuffer result = new StringBuffer();
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file));) {
+        StringBuilder result = new StringBuilder();
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 result.append(line);
@@ -55,8 +55,13 @@ public abstract class FileAbstractService {
         return new InputStreamResource(new FileInputStream(file));
     }
 
+    protected InputStreamResource getInputStreamOfString(String string) {
+        byte[] bytes = string.getBytes();
+        return new InputStreamResource(new ByteArrayInputStream(bytes));
+    }
+
     protected void importFileFromInputStream(InputStream inputStream, String path) throws IOException {
-        StringBuffer jsonStringBuffer = new StringBuffer();
+        StringBuilder jsonStringBuffer = new StringBuilder();
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
@@ -74,8 +79,7 @@ public abstract class FileAbstractService {
 
     private File getFile(String path) throws FileNotFoundException {
         if (Files.exists(Path.of(path))) {
-            File file = new File(path);
-            return file;
+            return new File(path);
         }
         throw new FileNotFoundException();
     }
