@@ -1,4 +1,4 @@
-package ru.tiunov.homeworkapp.exceptions;
+package ru.tiunov.homeworkapp.exception;
 
 public class NotFoundElementException extends Exception{
     public NotFoundElementException() {
