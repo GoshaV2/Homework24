@@ -9,10 +9,7 @@ import ru.tiunov.homeworkapp.services.IngredientService;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 @Service
 public class IngredientServiceImpl implements IngredientService {
@@ -93,5 +90,7 @@ public class IngredientServiceImpl implements IngredientService {
     @Override
     public void initializeData() throws IOException {
         ingredientDtoMap = ingredientFileService.readIngredientMap();
+        Optional<Integer> maxId=ingredientDtoMap.keySet().stream().max(Integer::compare);
+        maxId.ifPresent(integer -> lastIngredientId=integer);
     }
 }

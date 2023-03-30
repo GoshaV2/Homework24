@@ -18,4 +18,6 @@ public interface RecipeFileService {
     void importRecipeData(InputStream inputStream) throws IOException;
 
     void initRecipeService(RecipeService recipeService);
+
+    InputStreamResource getInputStreamOfRecipeForReading() throws IOException;
 }
